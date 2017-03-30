@@ -19,6 +19,7 @@ import scala.collection.immutable.HashMap
 import DefaultTestSuites._
 import config._
 import tile.XLen
+import sifive.blocks.devices.spi._
 
 class BasePlatformConfig extends Config((site, here, up) => {
   // DTS descriptive parameters
@@ -35,6 +36,15 @@ class BasePlatformConfig extends Config((site, here, up) => {
   case SOCBusConfig => site(L1toL2Config)
   case PeripheryBusConfig => TLBusConfig(beatBytes = 4)
   case PeripheryBusArithmetic => true
+	case PeripherySPIKey => List(
+		SPIParams(csWidth = 4, rAddress = 0x10024000, sampleDelay = 3),
+		SPIParams(csWidth = 1, rAddress = 0x10034000, sampleDelay = 3))
+	case PeripherySPIFlashKey =>
+		SPIFlashParams(
+			fAddress = 0x20000000,
+			rAddress = 0x10014000,
+			sampleDelay = 3)
+
   // Note that PLIC asserts that this is > 0.
   case IncludeJtagDTM => false
   case ZeroConfig => ZeroConfig(base=0xa000000L, size=0x2000000L, beatBytes=8)

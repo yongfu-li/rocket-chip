@@ -7,8 +7,12 @@ import config._
 import junctions._
 import rocketchip._
 
+import sifive.blocks.devices.spi._
+
 /** Example Top with Periphery (w/o coreplex) */
 abstract class ExampleTop(implicit p: Parameters) extends BaseTop
+    with HasPeripherySPI
+    with HasPeripherySPIFlash
     with PeripheryExtInterrupts
     with PeripheryMasterAXI4Mem
     with PeripheryMasterAXI4MMIO
@@ -17,6 +21,8 @@ abstract class ExampleTop(implicit p: Parameters) extends BaseTop
 }
 
 class ExampleTopBundle[+L <: ExampleTop](_outer: L) extends BaseTopBundle(_outer)
+    with HasPeripherySPIBundle
+    with HasPeripherySPIFlashBundle
     with PeripheryExtInterruptsBundle
     with PeripheryMasterAXI4MemBundle
     with PeripheryMasterAXI4MMIOBundle
