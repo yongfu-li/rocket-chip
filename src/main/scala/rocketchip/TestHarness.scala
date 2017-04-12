@@ -3,6 +3,8 @@
 package rocketchip
 
 import Chisel._
+// For parameterized black box
+import chisel3.experimental._
 import config._
 import junctions._
 import diplomacy._
@@ -27,7 +29,7 @@ class TestHarness()(implicit p: Parameters) extends Module {
   if (!p(IncludeJtagDTM)) {
     val dtm = Module(new SimDTM).connect(clock, reset, dut.io.debug.get, io.success)
   } else {
-    val jtag = Module(new SimJTAG).connect(dut.io.jtag.get, dut.io.jtag_reset.get, reset, io.success)
+    val jtag = Module(new SimJTAG(tickDelay=2)).connect(dut.io.jtag.get, dut.io.jtag_reset.get, reset, io.success)
     dut.io.jtag_mfr_id.get := p(JtagDTMKey).idcodeManufId.U(11.W)
   }
 
@@ -86,7 +88,7 @@ class SimDTM(implicit p: Parameters) extends BlackBox {
   }
 }
 
-class SimJTAG(implicit val p: Parameters) extends BlackBox {
+class SimJTAG(tickDelay: Int = 50) extends BlackBox(Map("TICK_DELAY" -> tickDelay)) {
   val io = new Bundle {
     val jtag = new JTAGIO(hasTRSTn = true)
     val enable = Bool(INPUT)
