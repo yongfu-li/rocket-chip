@@ -217,18 +217,17 @@ stamps/%/emulator-torture-$(TORTURE_CONFIG).stamp: stamps/%/emulator-debug.stamp
 
 #OPENOCD_HEAD ?= riscv
 OPENOCD_INSTALL ?= $(abspath $(TOP))/riscv-openocd-install
-#OPENOCD_VERSION = $(shell git ls-remote git@github.com/riscv/riscv-openocd.git $(OPENOCD_HEAD) | awk '{print $$1}')
-OPENOCD_VERSION = 0e66b07550de9076620e45d1f90e38ac6ef8f9d1
+OPENOCD_VERSION = 86e2306f9314b723c1bfd89d3a5f02290f65c9a8
 
 OPENOCD_DIR = $(OPENOCD_INSTALL)_$(OPENOCD_VERSION)/
 
 $(OPENOCD_DIR)/bin/openocd:
 	rm -rf riscv-openocd
-	git clone git@github.com:riscv/riscv-openocd.git
+	git clone https://github.com/riscv/riscv-openocd.git
 	cd riscv-openocd ; \
 	git checkout $(OPENOCD_VERSION) ; \
 	./bootstrap ; \
-	./configure --enable-jtag-vpi --prefix=$(OPENOCD_INSTALL)_$(OPENOCD_VERSION) --disable-werror; \
+	./configure --enable-remote-bitbang --prefix=$(OPENOCD_INSTALL)_$(OPENOCD_VERSION); \
 	make ; \
 	make install
 
