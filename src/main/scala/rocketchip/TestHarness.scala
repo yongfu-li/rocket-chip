@@ -29,7 +29,7 @@ class TestHarness()(implicit p: Parameters) extends Module {
   if (!p(IncludeJtagDTM)) {
     val dtm = Module(new SimDTM).connect(clock, reset, dut.io.debug.get, io.success)
   } else {
-    val jtag = Module(new SimJTAG(tickDelay=1)).connect(dut.io.jtag.get, dut.io.jtag_reset.get, reset, io.success)
+    val jtag = Module(new SimJTAG(tickDelay=3)).connect(dut.io.jtag.get, dut.io.jtag_reset.get, clock, reset, io.success)
     dut.io.jtag_mfr_id.get := p(JtagDTMKey).idcodeManufId.U(11.W)
   }
 
