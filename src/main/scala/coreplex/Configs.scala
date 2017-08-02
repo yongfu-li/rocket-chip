@@ -235,6 +235,12 @@ class WithoutFPU extends Config((site, here, up) => {
   }
 })
 
+class WithoutCompressed extends Config((site, here, up) => {
+  case RocketTilesKey => up(RocketTilesKey, site) map { r =>
+    r.copy(core = r.core.copy(useCompressed = false))
+  }
+})
+
 class WithFPUWithoutDivSqrt extends Config((site, here, up) => {
   case RocketTilesKey => up(RocketTilesKey, site) map { r =>
     r.copy(core = r.core.copy(fpu = r.core.fpu.map(_.copy(divSqrt = false))))
@@ -298,4 +304,8 @@ class WithDTS(model: String, compat: Seq[String]) extends Config((site, here, up
 
 class WithTimebase(hertz: BigInt) extends Config((site, here, up) => {
   case DTSTimebase => hertz
+})
+
+class WithRVFIMonitors extends Config((site, here, up) => {
+  case BuildCore => (p: Parameters) => new RocketWithRVFI()(p)
 })

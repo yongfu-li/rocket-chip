@@ -80,3 +80,40 @@ class TinyConfig extends Config(
 class DefaultFPGAConfig extends Config(new BaseConfig)
 
 class DefaultFPGASmallConfig extends Config(new WithNSmallCores(1) ++ new DefaultFPGAConfig)
+
+class DefaultConfigWithRVFIMonitors extends Config(
+  new WithRVFIMonitors ++
+  new WithoutMulDiv ++
+  new WithoutFPU ++
+  new WithoutCompressed ++
+  new WithNMemoryChannels(0) ++
+  new WithStatelessBridge ++
+  new WithNTinyCores(1) ++
+  new BaseConfig
+//  new BaseConfig().alter((site, here, up) => {
+//    case XLen => 32
+//    case RocketTilesKey => Seq(
+//      RocketTileParams(
+//        core = RocketCoreParams(
+//          useVM = false,
+//          fpu = None,
+//          mulDiv = None,
+//          useAtomics = false,
+//          useCompressed = false),
+//        btb = None,
+//        dcache = Some(DCacheParams(
+//          rowBits = site(L1toL2Config).beatBytes*8,
+//          nSets = 256, // 16Kb scratchpad
+//          nWays = 1,
+//          nTLBEntries = 4,
+//          nMSHRs = 0,
+//          blockBytes = site(CacheBlockBytes),
+//          scratch = Some(0x80000000L))),
+//        icache = Some(ICacheParams(
+//          rowBits = site(L1toL2Config).beatBytes*8,
+//          nSets = 64,
+//          nWays = 1,
+//          nTLBEntries = 4,
+//          blockBytes = site(CacheBlockBytes)))))
+//  })
+)
