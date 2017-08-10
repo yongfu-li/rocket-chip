@@ -790,7 +790,7 @@ object ImmGen {
 object RVFIMonitor {
   class RVFI_Base(xlen: Integer) extends Bundle {
     val valid = UInt(width=1)
-    val order = UInt(width=8)
+    val order = UInt(width=64)
     val insn = UInt(width=32)
     val intr = UInt(width=1)
     val trap = UInt(width=1)
@@ -826,7 +826,7 @@ class RVFIMonitor(implicit p: Parameters) extends BlackBox {
     val clock = Clock(INPUT)
     val reset = Bool(INPUT)
     val rvfi_valid = UInt(INPUT, width=nret)
-    val rvfi_order = UInt(INPUT, width=8*nret)
+    val rvfi_order = UInt(INPUT, width=64*nret)
     val rvfi_insn = UInt(INPUT, width=32*nret)
     val rvfi_intr = UInt(INPUT, width=nret)
     val rvfi_trap = UInt(INPUT, width=nret)
@@ -889,7 +889,7 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
   val has_data = wb_wen && !wb_set_sboard
   val priv = csr.io.status.prv
 
-  val inst_order = RegInit(UInt(0, width=8))
+  val inst_order = RegInit(UInt(0, width=64))
 
   inst_commit.pc_rdata := wb_reg_pc
   inst_commit.pc_wdata := Reg(next=io.imem.req.bits.pc)
@@ -931,12 +931,14 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
     }
   }
 
+  val store_commit = Wire(new RVFIMonitor.RVFI_Base(p(XLen))).suggestName("store_commit")
+  val inst_commit_filtered = Wire(new RVFIMonitor.RVFI_Base(p(XLen))).suggestName("inst_commit_filtered")
+
+  inst_commit_filtered := inst_commit
   when(wb_set_sboard && wb_wen) {
     rd_store_commit(wb_waddr) := inst_commit
-    inst_commit.valid := Bool(false)
+    inst_commit_filtered.valid := Bool(false)
   }
-
-  val store_commit = Wire(new RVFIMonitor.RVFI_Base(p(XLen)))
 
   when (ll_wen && rf_waddr =/= UInt(0)) {
     store_commit := rd_store_commit(rf_waddr)
@@ -946,5 +948,5 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
     store_commit := RVFIMonitor.invalid_RVFI_base(p(XLen))
   }
 
-  rvfi_mon.connect(Vec(Seq(inst_commit, store_commit)))
+  rvfi_mon.connect(Vec(Seq(inst_commit_filtered, store_commit)))
 }
