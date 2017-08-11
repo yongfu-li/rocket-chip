@@ -876,8 +876,8 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
   rvfi_mon.io.clock := clock
   rvfi_mon.io.reset := reset
 
-  val rd_store_commit = Vec.fill(32){Reg(init=RVFIMonitor.invalid_RVFI_base(p(XLen)))}
-  val inst_commit = Wire(new RVFIMonitor.RVFI_Base(p(XLen)))
+  val rd_store_commit = Reg(init=Vec(Seq.fill(32)(RVFIMonitor.invalid_RVFI_base(p(XLen)))))
+  val inst_commit = Wire(new RVFIMonitor.RVFI_Base(p(XLen))).suggestName("inst_commit")
 
 //  val pc = Wire(SInt(width=xLen))
   val pc = Wire(Bits())
@@ -939,6 +939,11 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
     rd_store_commit(wb_waddr) := inst_commit
     inst_commit_filtered.valid := Bool(false)
   }
+//  rd_store_commit.zipWithIndex.foreach ({case (rd_store_reg, idx) => {
+//    when(wb_set_sboard && wb_wen && idx.U===wb_waddr) {
+//      rd_store_reg := inst_commit
+//    }
+//  }})
 
   when (ll_wen && rf_waddr =/= UInt(0)) {
     store_commit := rd_store_commit(rf_waddr)
