@@ -898,13 +898,13 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
   inst_commit.intr := Reg(next=Reg(next=Reg(next=(csr.io.interrupt))))
   inst_commit.trap := Reg(next=Reg(next=Reg(next=(id_illegal_insn))))
   inst_commit.halt := UInt(0)
-  inst_commit.rs1_addr := Mux(Reg(next=Reg(next=ex_ctrl.sel_alu1))===A1_RS1, wb_reg_inst(19,15), UInt(0))
-  inst_commit.rs2_addr := Mux(Reg(next=Reg(next=ex_ctrl.sel_alu2))===A2_RS2, wb_reg_inst(24,20), UInt(0))
-  inst_commit.rs1_rdata := Reg(next=Reg(next=Mux(ex_ctrl.sel_alu1===A1_RS1, ex_rs(0), UInt(0))))
-  inst_commit.rs2_rdata := Reg(next=Reg(next=Mux(ex_ctrl.sel_alu2===A2_RS2, ex_rs(1), UInt(0))))
+  inst_commit.rs1_addr := Mux(Reg(next=Reg(next=ex_ctrl.rxs1)), wb_reg_inst(19,15), UInt(0))
+  inst_commit.rs2_addr := Mux(Reg(next=Reg(next=ex_ctrl.rxs2)), wb_reg_inst(24,20), UInt(0))
+  inst_commit.rs1_rdata := Mux(Reg(next=Reg(next=ex_ctrl.rxs1)), Reg(next=Reg(next=ex_rs(0))), UInt(0))
+  inst_commit.rs2_rdata := Mux(Reg(next=Reg(next=ex_ctrl.rxs2)), Reg(next=Reg(next=ex_rs(1))), UInt(0)) 
   inst_commit.mem_addr := Reg(next=Reg(next=io.dmem.req.bits.addr))
-  inst_commit.mem_rdata := Reg(next=io.dmem.s1_data.data)
-  inst_commit.mem_rmask := Fill(p(XLen)/8, Reg(next=Reg(next=io.dmem.req.valid)) && !Reg(next=io.dmem.s1_kill) && !io.dmem.s2_nack && Reg(next=Reg(next=isRead(io.dmem.req.bits.cmd))))// & Reg(next=io.dmem.s1_data.mask)
+  inst_commit.mem_rdata := io.dmem.resp.bits.data
+  inst_commit.mem_rmask := Fill(p(XLen)/8, dmem_resp_valid)
   inst_commit.mem_wdata := Reg(next=io.dmem.s1_data.data)
   inst_commit.mem_wmask := Fill(p(XLen)/8, Reg(next=Reg(next=io.dmem.req.valid)) && !Reg(next=io.dmem.s1_kill) && !io.dmem.s2_nack && Reg(next=Reg(next=isWrite(io.dmem.req.bits.cmd))))  // TODO Partial store bits (M_PWR)
 
@@ -949,6 +949,8 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
     store_commit := rd_store_commit(rf_waddr)
     store_commit.rd_addr := rf_waddr
     store_commit.rd_wdata := rf_wdata
+    store_commit.mem_rdata := io.dmem.resp.bits.data
+    store_commit.mem_rmask := Fill(p(XLen)/8, dmem_resp_valid)
   } .otherwise {
     store_commit := RVFIMonitor.invalid_RVFI_base(p(XLen))
   }
