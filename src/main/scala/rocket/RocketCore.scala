@@ -906,7 +906,27 @@ class RocketWithRVFI(implicit p: Parameters) extends Rocket()(p) {
   inst_commit.mem_rdata := io.dmem.resp.bits.data
   inst_commit.mem_rmask := Fill(p(XLen)/8, dmem_resp_valid)
   inst_commit.mem_wdata := Reg(next=io.dmem.s1_data.data)
-  inst_commit.mem_wmask := Fill(p(XLen)/8, Reg(next=Reg(next=io.dmem.req.valid)) && !Reg(next=io.dmem.s1_kill) && !io.dmem.s2_nack && Reg(next=Reg(next=isWrite(io.dmem.req.bits.cmd))))  // TODO Partial store bits (M_PWR)
+  val mem_wvalid = Reg(next=Reg(next=io.dmem.req.valid)) && !Reg(next=io.dmem.s1_kill) && !io.dmem.s2_nack && Reg(next=Reg(next=isWrite(io.dmem.req.bits.cmd)))
+  when(mem_wvalid) {
+    inst_commit.mem_wmask := SInt(-1).asUInt
+    switch(Reg(next=Reg(next=io.dmem.req.bits.typ))) {
+      is(MT_B) {
+        inst_commit.mem_wmask := UInt("b1")
+      }
+      is (MT_H) {
+        inst_commit.mem_wmask := UInt("b11")
+      }
+      is (MT_W) {
+        inst_commit.mem_wmask := UInt("b1111")
+      }
+      is (MT_D) {
+        inst_commit.mem_wmask := UInt("b11111111")
+      }
+    }
+  } .otherwise {
+    inst_commit.mem_wmask := UInt(0)
+  }
+//  inst_commit.mem_wmask := Fill(p(XLen)/8, Reg(next=Reg(next=io.dmem.req.valid)) && !Reg(next=io.dmem.s1_kill) && !io.dmem.s2_nack && Reg(next=Reg(next=isWrite(io.dmem.req.bits.cmd))))  // TODO Partial store bits (M_PWR)
 
   inst_commit.valid := Bool(false)
   when (wb_valid) {
