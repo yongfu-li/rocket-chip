@@ -12,8 +12,7 @@ import freechips.rocketchip.tile._
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util._
 
-class ScratchpadSlavePort(address: AddressSet)(implicit p: Parameters) extends LazyModule
-    with HasCoreParameters {
+class ScratchpadSlavePort(address: AddressSet, coreDataBytes: Int, usingAtomics: Boolean)(implicit p: Parameters) extends LazyModule {
   val device = new SimpleDevice("dtim", Seq("sifive,dtim0"))
   val node = TLManagerNode(Seq(TLManagerPortParameters(
     Seq(TLManagerParameters(
@@ -114,7 +113,7 @@ trait CanHaveScratchpad extends HasHellaCache with HasICacheFrontend {
 
   // 2) ScratchpadSlavePort always has a node, but only exists when the HellaCache has a scratchpad
   val scratch = tileParams.dcache.flatMap(d => d.scratch.map(s =>
-    LazyModule(new ScratchpadSlavePort(AddressSet(s, d.dataScratchpadBytes-1)))))
+    LazyModule(new ScratchpadSlavePort(AddressSet(s, d.dataScratchpadBytes-1), xLenBytes, tileParams.core.useAtomics))))
   scratch foreach { lm => lm.node connectButDontMonitor TLFragmenter(xLenBytes, cacheBlockBytes, earlyAck=true)(slaveNode) }
 
   def findScratchpadFromICache: Option[AddressSet] = scratch.map { s =>
