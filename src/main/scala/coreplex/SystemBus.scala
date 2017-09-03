@@ -35,6 +35,15 @@ class SystemBus(params: SystemBusParams)(implicit p: Parameters) extends TLBusWr
   pbus_fixer.suggestName(s"${busName}_pbus_TLFIFOFixer")
   pbus_fixer.node :*= outwardWWNode
 
+  private val tile_bce_buf = LazyModule(new TLBuffer(
+    a = BufferParams.none,
+    b = BufferParams.default,
+    c = BufferParams.default,
+    d = BufferParams.none,
+    e = BufferParams.default))
+  tile_bce_buf.suggestName(s"${busName}_tile_bce_TLBuffer")
+  master_splitter.node :=* tile_bce_buf.node
+
   def toSplitSlaves: TLOutwardNode = outwardSplitNode
 
   def toPeripheryBus(addBuffers: Int): TLOutwardNode = {
@@ -56,7 +65,7 @@ class SystemBus(params: SystemBusParams)(implicit p: Parameters) extends TLBusWr
     name.foreach { n => tile_fixer.suggestName(s"${busName}_${n}_TLFIFOFixer") }
     val (in, out) = bufferChain(addBuffers, name = name)
 
-    master_splitter.node :=* out
+    tile_bce_buf.node  :=* out
     in :=* tile_fixer.node
     tile_fixer.node :=* tile_buf.node
     tile_buf.node
@@ -69,7 +78,7 @@ class SystemBus(params: SystemBusParams)(implicit p: Parameters) extends TLBusWr
     name.foreach { n => tile_fixer.suggestName(s"${busName}_${n}_TLFIFOFixer") }
     val (in, out) = bufferChain(addBuffers, name = name)
 
-    master_splitter.node :=* out
+    tile_bce_buf.node :=* out
     in :=* tile_fixer.node
     tile_fixer.node :=* tile_sink.node
     tile_sink.node
@@ -82,7 +91,7 @@ class SystemBus(params: SystemBusParams)(implicit p: Parameters) extends TLBusWr
     name.foreach { n => tile_fixer.suggestName(s"${busName}_${n}_TLFIFOFixer") }
     val (in, out) = bufferChain(addBuffers, name = name)
 
-    master_splitter.node :=* out
+    tile_bce_buf.node :=* out
     in :=* tile_fixer.node
     tile_fixer.node :=* tile_sink.node
     tile_sink.node
